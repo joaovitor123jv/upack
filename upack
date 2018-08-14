@@ -1,0 +1,170 @@
+#!/usr/bin/ruby
+
+require 'yaml'
+
+args = ARGV
+
+configFilePath = "/etc/upack.yaml"
+supportEmail = "segantin.jv@gmail.com"
+helpWebpage = "https://github.com/joaovitor123jv/upack"
+
+AvaiableDistros = ["Arch", "Debian"]
+
+def showAvaiableDistro
+	puts "Ohh, you want to know the distributions I know"
+	puts "Ok, that's the list ^^"
+	AvaiableDistros.each do |distro|
+		puts "\t#{distro}"
+	end
+end
+
+def showHelp
+	puts "You can call me with a few commands\n\n"
+	puts "   upack update                   => this will update your system, including all programs"
+	puts "   upack install packageName      => this will install the specified package into your system including all necessary dependencies"
+	puts "   upack search something         => this will search the specified query into your system and show you"
+end
+
+def distroAvaiable(name)
+	if name == nil then
+		return false
+	elsif name.empty? then
+		return false
+	end
+
+	case name
+	when "Arch"
+		return true
+	when "Debian"
+		return true
+	end
+	return false
+end
+
+if not File.exists? configFilePath then
+	puts "Welcome to upack !"
+	puts "It seems is the first time you're running me. I'll set some adjusts to know what I need to do to help you ^^"
+	system "lsb_release -a > /tmp/upackDistroInfo"
+	rootDistro = nil
+	File.open("/tmp/upackDistroInfo", 'r'){ |file|
+		file.gets
+		line = file.gets
+		rootDistro = line.split[2]
+	}
+
+	puts "Ok... I think your distribution name is #{rootDistro}, am I right ? (y/n)"
+	response = gets.chomp
+	if response == "n" or response == "N" then
+		puts "Ohh... sorry, my mistake"
+		puts "I'll be glad if you insert your distro name. To check the names that I undestand, type 'help'"
+
+
+		doItAgain = true
+		while doItAgain do
+			rootDistro = gets.chomp
+			if distroAvaiable rootDistro then
+				puts "Thanks ^^, now I'll finish the configurations for you"
+				doItAgain = false
+			elsif rootDistro == "help" or rootDistro == "h" then
+				showAvaiableDistro
+				puts "Now you know the GNU/Linux distributions I know, please let me know in what distribution I'm running :-D"
+			else
+				puts "Oh... you typed something... but I don't know about this GNU/Linux distribution :-/"
+				puts "Maybe you missed some key ? If you don't know what you need to type, just type 'help'"
+			end
+		end
+
+
+	elsif response == y or response == Y then
+		puts "That's nice !, I'll see if I can do somthing here"
+		if not distroAvaiable rootDistro then
+			puts "Oh... It seems I don't know about this distribution, please send me an email, and I'll try to help you in future."
+			puts "But unhaply... I can't help you now :-("
+			puts "My e-mail is #{supportEmail}"
+			rootDistro = nil
+		end
+	end
+
+	defaultConfs = {
+		'distribution' => rootDistro,
+	}
+	File.open(configFilePath, 'w') { |file| file.puts YAML::dump(defaultConfs) }
+	puts "The needed configuration was completed, do you want to install this script into your system directory ? (y/n) "
+	puts "\t\tThis will create/usr/bin/upack to call it as 'upack' only"
+	response = gets.chomp
+	if response == "y" or response == "Y"
+		system "sudo cp ./upack /usr/bin/upack"
+	else
+		puts "Ok, you're ready to use upack!"
+	end
+	puts "\n\nOk... I've finished configuring all, if you want some help to use me, just type 'upack help'"
+end
+
+
+config = YAML.load_file configFilePath
+
+
+puts "Detected distro = |#{config['distribution']}|"
+
+if args.length == 0 then
+	puts "Ah, I still not have an interative menu..."
+	puts "To know about the commands I can run, type 'upack help'"
+	exit 0
+else
+	if args[0] == "help" or args[0] == "h"
+		showHelp
+	elsif args[0] == "update" then
+
+		if config["distribution"] == "Arch"
+			system "sudo pacman -Syu"
+		elsif config["distribution"] == "Debian"
+			system "sudo apt-get update; sudo apt-get upgrade"
+		else
+			puts "Sorry, I don't know about this distribution :-/"
+		end
+
+	elsif args[0] == "install"
+
+		if args[1] == nil
+			puts "Ahh, I think I have not said I cannot read minds... did you forget to specify what I need to install ?"
+		elsif args[1].empty?
+			puts "Ahh, I think I have not said I cannot read minds... did you forget to specify what I need to install ?"
+		else
+
+			if config["distribution"] == "Arch"
+				system "sudo pacman -S #{args[1]}"
+			elsif config["distribution"] == "Debian"
+				system "sudo apt-get install #{args[1]}"
+			else
+				puts "Sorry, I don't know about this distribution :-/"
+			end
+
+		end
+
+	elsif args[0] == "search"
+
+		if args[1] == nil
+			puts "Ahh, I think I have not said I cannot read minds... did you forget to specify what I need to search about ?"
+		elsif args[1].empty?
+			puts "Ahh, I think I have not said I cannot read minds... did you forget to specify what I need to search about ?"
+		else
+
+			if config["distribution"] == "Arch"
+				system "sudo pacsearch #{args[1]}"
+			elsif config["distribution"] == "Debian"
+				system "sudo apt-cache search #{args[1]}"
+			else
+				puts "Sorry, I don't know about this distribution :-/"
+			end
+
+		end
+	else
+		puts "Sorry, I don't know this command, please see the avaiable options typing 'upack help'"
+	end
+end
+
+
+
+
+
+

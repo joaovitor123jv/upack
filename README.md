@@ -5,12 +5,11 @@
 1. To use it, clone the repository with:
   `git clone https://github.com/joaovitor123jv/upack`
 
-2. then go to the clond directory:
+2. Go to the cloned directory:
   `cd upack`
   
 3. then run it with:
-  `./upack`
-  
+  `sudo ./upack` (sudo required only on first run)
   
 If upack can't run, you probably will need to install ruby interpreter...
   * On Debian/Ubuntu:
